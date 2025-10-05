@@ -141,6 +141,21 @@
         .vip-form-label {
             font-weight: 500;
         }
+        /* === NEW: Color Input Styling === */
+        .color-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .color-input {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -406,6 +421,31 @@
                                 <option value="true">Active</option>
                                 <option value="false">Inactive</option>
                             </select>
+                        </div>
+                        <!-- === NEW: Color Configuration Options === -->
+                        <div class="col-md-6">
+                            <label for="balanceCardBgGradient" class="form-label">Balance Card Background Gradient</label>
+                            <div class="color-input-group">
+                                <div class="color-preview" id="balanceCardBgGradientPreview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                                <input type="text" class="form-control color-input" id="balanceCardBgGradient" name="balanceCardBgGradient" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                            </div>
+                            <div class="form-text">CSS gradient value for balance card background</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="depositInstructionTextColor" class="form-label">Deposit Instruction Text Color</label>
+                            <div class="color-input-group">
+                                <div class="color-preview" id="depositInstructionTextColorPreview" style="background-color: #333333;"></div>
+                                <input type="color" class="form-control color-input" id="depositInstructionTextColor" name="depositInstructionTextColor" value="#333333">
+                            </div>
+                            <div class="form-text">Color for deposit instruction text</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="depositNumberColor" class="form-label">Deposit Number Color</label>
+                            <div class="color-input-group">
+                                <div class="color-preview" id="depositNumberColorPreview" style="background-color: #007bff;"></div>
+                                <input type="color" class="form-control color-input" id="depositNumberColor" name="depositNumberColor" value="#007bff">
+                            </div>
+                            <div class="form-text">Color for deposit number text</div>
                         </div>
                     </div>
                 </form>
@@ -950,7 +990,10 @@
                     minWithdrawAmount: 5,
                     dailyAdLimitPerUser: 10,
                     isAdSystemActive: true,
-                    resetTimerHours: 12 // Default reset timer
+                    resetTimerHours: 12, // Default reset timer
+                    balanceCardBgGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    depositInstructionTextColor: "#333333",
+                    depositNumberColor: "#007bff"
                  };
                  console.log("App config initialized with defaults:", appConfig);
                  updateDashboardStats();
@@ -1386,7 +1429,32 @@
         document.getElementById('dailyAdLimitPerUser').value = appConfig.dailyAdLimitPerUser || '';
         document.getElementById('resetTimerHours').value = appConfig.resetTimerHours || '12'; // Default to 12 if not set
         document.getElementById('isAdSystemActive').value = appConfig.isAdSystemActive !== undefined ? appConfig.isAdSystemActive.toString() : 'true';
+        
+        // === NEW: Load Color Configuration Options ===
+        document.getElementById('balanceCardBgGradient').value = appConfig.balanceCardBgGradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        document.getElementById('depositInstructionTextColor').value = appConfig.depositInstructionTextColor || '#333333';
+        document.getElementById('depositNumberColor').value = appConfig.depositNumberColor || '#007bff';
+        
+        // Update previews
+        updateColorPreviews();
     }
+    
+    // === NEW: Function to update color previews ===
+    function updateColorPreviews() {
+        const gradientValue = document.getElementById('balanceCardBgGradient').value;
+        const instructionColor = document.getElementById('depositInstructionTextColor').value;
+        const numberColor = document.getElementById('depositNumberColor').value;
+        
+        document.getElementById('balanceCardBgGradientPreview').style.background = gradientValue;
+        document.getElementById('depositInstructionTextColorPreview').style.backgroundColor = instructionColor;
+        document.getElementById('depositNumberColorPreview').style.backgroundColor = numberColor;
+    }
+    
+    // === NEW: Event listeners for color inputs ===
+    document.getElementById('balanceCardBgGradient').addEventListener('input', updateColorPreviews);
+    document.getElementById('depositInstructionTextColor').addEventListener('input', updateColorPreviews);
+    document.getElementById('depositNumberColor').addEventListener('input', updateColorPreviews);
+
     // --- Updated saveAppConfig function ---
     async function saveAppConfig() {
         // Get the form element
@@ -1404,12 +1472,15 @@
             } else if (key === 'valuePerConversion' || key === 'minWithdrawAmount') {
                 // Convert to float for currency values
                 newConfig[key] = parseFloat(value);
+            } else if (key === 'balanceCardBgGradient' || key === 'depositInstructionTextColor' || key === 'depositNumberColor') {
+                // Keep color values as strings
+                newConfig[key] = value;
             } else {
                 // Convert to integer for other numeric values
                 newConfig[key] = parseInt(value);
             }
-            // Basic validation: Check if conversion was successful
-            if (isNaN(newConfig[key])) {
+            // Basic validation: Check if conversion was successful (skip for color values)
+            if (key !== 'balanceCardBgGradient' && key !== 'depositInstructionTextColor' && key !== 'depositNumberColor' && isNaN(newConfig[key])) {
                  showToast('Error', `Invalid value for ${key}. Please check the input.`, true);
                  return; // Stop execution if validation fails
             }
